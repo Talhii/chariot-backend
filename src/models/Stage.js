@@ -1,9 +1,14 @@
 import mongoose from 'mongoose';
 
-const stageTaskSchema = new mongoose.Schema(
+const stageSchema = new mongoose.Schema(
   {
     stage: {
       type: Number,
+      required: true
+    },
+    name: {
+      type: String,
+      enum: ['Cutting', 'Sink Cutout', 'Polishing Top', 'Sink and Edge Polishing', 'QC'],
       required: true
     },
     checklist: [
@@ -19,6 +24,6 @@ const stageTaskSchema = new mongoose.Schema(
   }
 );
 
-const StageTask = mongoose.model('StageTask', stageTaskSchema);
+const Stage = mongoose.model('Stage', stageSchema);
 
-export default StageTask;
+export default Stage;

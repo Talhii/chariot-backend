@@ -2,11 +2,6 @@ import mongoose from 'mongoose';
 
 const defectLogSchema = new mongoose.Schema(
   {
-    defectId: {
-      type: String,
-      required: true,
-      unique: true
-    },
     pieceId: {
       type: String,
       required: true

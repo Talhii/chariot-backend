@@ -1,9 +1,12 @@
 # Node.js
 node_modules/
 npm-debug.log
+package-lock.json
 
 # Environment Variables
 .env
+
+
 
 # MacOS
 .DS_Store

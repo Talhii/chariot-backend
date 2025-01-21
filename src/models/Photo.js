@@ -2,11 +2,6 @@ import mongoose from 'mongoose';
 
 const photoSchema = new mongoose.Schema(
   {
-    photoId: {
-      type: String,
-      required: true,
-      unique: true
-    },
     pieceId: {
       type: String,
       required: true

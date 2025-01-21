@@ -2,15 +2,7 @@ import mongoose from 'mongoose';
 
 const pieceSchema = new mongoose.Schema(
   {
-    pieceId: {
-      type: String,
-      required: true,
-      unique: true
-    },
-    orderId: {
-      type: String,
-      required: true
-    },
+    orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true },
     refNumber: {
       type: String,
       required: true,
@@ -20,10 +12,7 @@ const pieceSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    currentStage: {
-      type: Number,
-      required: true
-    },
+    currentStage: { type: mongoose.Schema.Types.ObjectId, ref: 'Stage', required: true },
     status: {
       type: String,
       enum: ['Pending', 'In Progress', 'Flagged', 'Completed'],

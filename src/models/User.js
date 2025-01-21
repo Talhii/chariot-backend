@@ -2,12 +2,7 @@ import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema(
   {
-    userId: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    name: {
+    fullName: {
       type: String,
       required: true,
     },
@@ -16,14 +11,25 @@ const userSchema = new mongoose.Schema(
       enum: ['Worker', 'Manager', 'Admin'],
       required: true,
     },
-    stage: {
-      type: Number,
-      default: 0,
+    username: {
+      type: String,
+      required: false,
+    },
+    password: {
+      type: String,
+      required: false,
     },
     accessCode: {
       type: String,
-      required: true,
-      unique: true,
+      required: false,
+    },
+    photoUrl: { 
+      type: String, 
+      required: true 
+    },
+    stage: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Stage',
     },
   },
   {
