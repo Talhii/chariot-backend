@@ -63,7 +63,7 @@ export const createUser = async (req, res) => {
         const photoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
         req.body.photoUrl = photoUrl;
 
-        if(req.body.role === 'Admin' || req.body.role === 'Manager') {
+        if (req.body.role === 'Admin' || req.body.role === 'Manager') {
             const salt = await bcrypt.genSalt(10);
             req.body.password = await bcrypt.hash(req.body.password, salt);
         }
@@ -83,26 +83,37 @@ export const createUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
     try {
+        const updateData = {};
 
-        console.log(req.body)
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
-            runValidators: true
-        });
+        if (req.file) {
+            const photoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+            updateData.photoUrl = photoUrl;
+        }
+
+        // Update other user fields from request body
+        Object.assign(updateData, req.body);
+
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            updateData,
+            { new: true, runValidators: true }
+        );
+
         if (!user) {
             return res.status(404).json({
                 status: 'fail',
-                message: 'No user found with that ID'
+                message: 'No user found with that ID',
             });
         }
+
         res.status(200).json({
             status: 'success',
-            data: user
+            data: user,
         });
     } catch (err) {
         res.status(400).json({
             status: 'fail',
-            message: err.message
+            message: err.message,
         });
     }
 };
@@ -116,7 +127,7 @@ export const deleteUser = async (req, res) => {
                 message: 'No user found with that ID'
             });
         }
-        res.status(204).json({
+        res.status(200).json({
             status: 'success',
             message: 'User deleted successfully',
             data: null
@@ -145,9 +156,7 @@ export const getAllOrders = async (req, res) => {
         res.status(200).json({
             status: 'success',
             results: orders.length,
-            data: {
-                orders
-            }
+            data: orders
         });
 
     } catch (err) {
@@ -233,7 +242,7 @@ export const deleteOrder = async (req, res) => {
                 message: 'No order found with that ID'
             });
         }
-        res.status(204).json({
+        res.status(200).json({
             status: 'success',
             data: null
         });
@@ -250,6 +259,17 @@ export const deleteOrder = async (req, res) => {
 //Stages
 export const createStage = async (req, res) => {
     try {
+
+        const stageAlreadyExists = await Stage.findOne({
+            number: req.body.number
+        });
+
+        if (stageAlreadyExists) {
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Stage with that number already exists'
+            });
+        }
         const newStage = await Stage.create(req.body);
         res.status(201).json({
             status: 'success',
@@ -270,10 +290,7 @@ export const getAllStages = async (req, res) => {
         const stages = await Stage.find();
         res.status(200).json({
             status: 'success',
-            results: stages.length,
-            data: {
-                stages
-            }
+            data: stages
         });
     } catch (err) {
         res.status(400).json({
@@ -294,9 +311,7 @@ export const getStage = async (req, res) => {
         }
         res.status(200).json({
             status: 'success',
-            data: {
-                stage
-            }
+            data: stage
         });
     } catch (err) {
         res.status(400).json({
@@ -344,7 +359,7 @@ export const deleteStage = async (req, res) => {
                 message: 'No stage found with that ID'
             });
         }
-        res.status(204).json({
+        res.status(200).json({
             status: 'success',
             data: null
         });
@@ -484,6 +499,27 @@ export const resolveFlaggedPiece = async (req, res) => {
             data: {
                 piece
             }
+        });
+    } catch (err) {
+        res.status(400).json({
+            status: 'fail',
+            message: err.message
+        });
+    }
+}
+
+export const deletePiece = async (req, res) => {
+    try {
+        const piece = await Piece.findByIdAndDelete(req.params.id);
+        if (!piece) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'No piece found with that ID'
+            });
+        }
+        res.status(200).json({
+            status: 'success',
+            data: null
         });
     } catch (err) {
         res.status(400).json({

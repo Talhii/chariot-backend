@@ -2,18 +2,17 @@ import mongoose from 'mongoose';
 
 const stageSchema = new mongoose.Schema(
   {
-    stage: {
+    number: {
       type: Number,
       required: true
     },
     name: {
       type: String,
-      enum: ['Cutting', 'Sink Cutout', 'Polishing Top', 'Sink and Edge Polishing', 'QC'],
+      // enum: ['Cutting', 'Sink Cutout', 'Polishing Top', 'Sink and Edge Polishing', 'QC'],
       required: true
     },
     checklist: [
       {
-        taskId: { type: String, required: true },
         description: { type: String, required: true },
         isMandatory: { type: Boolean, required: true }
       }

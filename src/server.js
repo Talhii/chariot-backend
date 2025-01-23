@@ -8,7 +8,6 @@ import workerRoutes from './routes/workerRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import commonRoutes from './routes/commonRoutes.js';
 import bodyParser from 'body-parser';
-import formidable from 'express-formidable';
 
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -22,7 +21,7 @@ const app = express();
 
 // Define a more restrictive CORS policy if needed (example)
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://192.168.100.110:3000'], 
+  origin: ['http://localhost:3000', 'http://192.168.1.23:3000'], 
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
@@ -30,8 +29,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(logger);
 app.use(express.json()); // Parse JSON request bodies
-app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded request bodies
-app.use(formidable()); // Parse form data
+app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded request bodies // Parse form data
 
 // Connect to the database
 connectDB().catch((error) => {

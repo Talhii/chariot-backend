@@ -9,8 +9,7 @@ export const login = async (req, res) => {
     let user;
     try {
         if (role === 'Worker') {
-            user = await User
-                .findOne({ accessCode })
+            user = await User.findOne({ accessCode })
             if (!user) {
                 return res.status(400).json({ message: 'Invalid access code' });
             }

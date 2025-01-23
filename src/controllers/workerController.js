@@ -26,7 +26,7 @@ export const getPieceById = async (req, res) => {
 export const updatePieceHistory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { stage, workerId, notes, flagged } = req.body;
+    const { stageNumber, workerId, notes, flagged } = req.body;
     const photoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
 
     const piece = await Piece
@@ -38,7 +38,7 @@ export const updatePieceHistory = async (req, res) => {
           $push: {
             flagged,
             history: {
-              stage,
+              stage: stageNumber,
               workerId,
               timestamp: new Date(),
               photoUrl,
