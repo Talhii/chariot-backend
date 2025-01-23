@@ -23,11 +23,11 @@ export const getAllUsers = async (req, res) => {
             where.role = role;
         }
 
-        const users = await User.find(where).skip(skip).limit(limit);
+        const users = await User.find(where).skip(skip).limit(limit).sort({ _id: -1 });
         res.status(200).json({
             status: 'success',
             results: users.length,
-            users
+            data: users
         });
     } catch (err) {
         res.status(400).json({
@@ -63,13 +63,15 @@ export const createUser = async (req, res) => {
         const photoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
         req.body.photoUrl = photoUrl;
 
-        const salt = await bcrypt.genSalt(10);
-        req.body.password = await bcrypt.hash(req.body.password, salt);
+        if(req.body.role === 'Admin' || req.body.role === 'Manager') {
+            const salt = await bcrypt.genSalt(10);
+            req.body.password = await bcrypt.hash(req.body.password, salt);
+        }
 
         const newUser = await User.create(req.body);
         res.status(201).json({
             status: 'success',
-            data: newUser
+            data: null
         });
     } catch (err) {
         res.status(400).json({
@@ -81,6 +83,8 @@ export const createUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
     try {
+
+        console.log(req.body)
         const user = await User.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true

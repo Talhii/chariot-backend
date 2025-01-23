@@ -1,12 +1,5 @@
 import Piece from '../models/Piece.js';
 import Stage from '../models/Stage.js';
-import Photo from '../models/Photo.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 export const getPieceById = async (req, res) => {
   try {
