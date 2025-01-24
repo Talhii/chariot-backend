@@ -26,7 +26,6 @@ router.delete('/stage/:id', deleteStage);
 
 router.put('/user/:id/assign-stage/:stageId', assignStageToWorker);
 
-
 router.get('/piece', getAllPieces);
 router.get('/piece/flagged', getFlaggedPieces);
 router.put('/piece/flagged/:id/resolved', resolveFlaggedPiece);

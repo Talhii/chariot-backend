@@ -19,19 +19,17 @@ dotenv.config();
 
 const app = express();
 
-// Define a more restrictive CORS policy if needed (example)
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://192.168.1.23:3000'], 
+  origin: ['http://localhost:3000', 'http://192.168.100.110:3000'], 
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 app.use(cors(corsOptions));
 app.use(logger);
-app.use(express.json()); // Parse JSON request bodies
-app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded request bodies // Parse form data
+app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// Connect to the database
 connectDB().catch((error) => {
   console.error('Error connecting to database:', error);
   process.exit(1); 
@@ -43,7 +41,6 @@ app.use('/api', commonRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Basic error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Internal Server Error' });
