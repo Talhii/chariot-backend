@@ -1,10 +1,12 @@
 import express from 'express';
-import { getOrder, getAllOrders, createOrder, getAllUsers, createUser, getUser, updateUser, deleteUser, getAllStages, createStage, updateStage, getStage, deleteStage, assignStageToWorker, getFlaggedPieces, resolveFlaggedPiece, getPiecesGroupbyStage, getAllPieces, deletePiece, deleteOrder, updateOrder } from '../controllers/adminController.js';
+import { getOrder, getAllOrders, createOrder, getAllUsers, createUser, getUser, updateUser, deleteUser, getAllStages, createStage, updateStage, getStage, deleteStage, assignStageToWorker, getFlaggedPieces, resolveFlaggedPiece, getPiecesGroupbyStage, getAllPieces, deletePiece, deleteOrder, updateOrder, getDashboardData } from '../controllers/adminController.js';
 import { validate } from '../middleware/validator.js';
 import { createUserValidationSchema, updateUserValidationSchema, createStageValidationSchema, updateStageValidationSchema } from '../utils/validators/adminValidations.js';
 import upload from '../middleware/upload.js';
 
 const router = express.Router();
+
+router.get('/dashboard', getDashboardData)
 
 router.get('/order', getAllOrders);
 router.post('/order', createOrder);

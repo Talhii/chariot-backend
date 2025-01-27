@@ -6,13 +6,15 @@ import bcrypt from 'bcryptjs';
 export const login = async (req, res) => {
     const { accessCode, role, username, password } = req.body;
 
-    let user;
+    let user, token;
     try {
         if (role === 'Worker') {
             user = await User.findOne({ accessCode })
             if (!user) {
                 return res.status(400).json({ message: 'Invalid access code' });
             }
+
+            token = jwt.sign({ user: { id: user._id, role: user.role } }, process.env.JWT_SECRET);
         }
 
         if (role === 'Admin' || role === 'Manager') {
@@ -28,9 +30,8 @@ export const login = async (req, res) => {
                 return res.status(400).json({ message: 'Invalid credentials' });
             }
 
+            token = jwt.sign({ user: { id: user._id, role: user.role } }, process.env.JWT_SECRET, { expiresIn: '1h' });
         }
-
-        const token = jwt.sign({ user: { id: user._id, role: user.role } }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         res.status(200).json({ success: true, token });
     } catch (error) {

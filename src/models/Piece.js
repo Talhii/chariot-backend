@@ -15,7 +15,7 @@ const pieceSchema = new mongoose.Schema(
     currentStage: { type: mongoose.Schema.Types.ObjectId, ref: 'Stage', required: true },
     status: {
       type: String,
-      enum: ['Pending', 'In Progress', 'Flagged', 'Completed'],
+      // enum: ['Pending', 'In Progress', 'Flagged', 'Completed'],
       required: true
     },
     qrCode: {
@@ -29,7 +29,7 @@ const pieceSchema = new mongoose.Schema(
     history: [
       {
         stage: { type: Number, required: true },
-        workerId: { type: String, required: true },
+        workerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
         timestamp: { type: Date, required: true },
         photoUrl: { type: String, required: true },
         notes: { type: String },

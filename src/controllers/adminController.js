@@ -5,6 +5,165 @@ import Piece from '../models/Piece.js';
 import bcrypt from 'bcryptjs';
 
 
+export const getDashboardData = async (req, res) => {
+    try {
+
+        const currentDate = new Date();
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(currentDate.getDate() - 7);
+
+        // const completedPiecesByDay = await Piece.aggregate([
+        //     {
+        //         $match: {
+        //             status: 'Completed',
+        //             updatedAt: { $gte: oneWeekAgo }  // Filter completed pieces within the last week
+        //         }
+        //     },
+        //     {
+        //         $project: {
+        //             dayOfWeek: {
+        //                 $cond: {
+        //                     if: { $gte: [{ $type: '$updatedAt' }, 'date'] }, // Check if updatedAt is a valid date
+        //                     then: { $dayOfWeek: '$updatedAt' },
+        //                     else: null  // If updatedAt is invalid, set as null
+        //                 }
+        //             },
+        //             piecesCount: 1  // Keep the count field
+        //         }
+        //     },
+        //     {
+        //         $group: {
+        //             _id: '$dayOfWeek',  // Group by the day of the week
+        //             count: { $sum: 1 }  // Count how many pieces per day
+        //         }
+        //     },
+        //     {
+        //         $sort: { _id: 1 }  // Sort by day of the week (1 - Sunday, 7 - Saturday)
+        //     },
+        //     {
+        //         $project: {
+        //             day: {
+        //                 $switch: {  // Convert day of week number to day name
+        //                     branches: [
+        //                         { case: { $eq: ['$dayOfWeek', 1] }, then: 'Sun' },
+        //                         { case: { $eq: ['$dayOfWeek', 2] }, then: 'Mon' },
+        //                         { case: { $eq: ['$dayOfWeek', 3] }, then: 'Tue' },
+        //                         { case: { $eq: ['$dayOfWeek', 4] }, then: 'Wed' },
+        //                         { case: { $eq: ['$dayOfWeek', 5] }, then: 'Thu' },
+        //                         { case: { $eq: ['$dayOfWeek', 6] }, then: 'Fri' },
+        //                         { case: { $eq: ['$dayOfWeek', 7] }, then: 'Sat' }
+        //                     ],
+        //                     default: 'Unknown'
+        //                 }
+        //             },
+        //             piecesCount: '$count'  // The count of pieces per day
+        //         }
+        //     }
+        // ]);
+        // const result = completedPiecesByDay.map(item => ({
+        //     day: item.day,
+        //     piecesCount: item.piecesCount
+        // }));
+
+        // console.log(result);
+
+        const flaggedPieces = await Piece.find({ flagged: true })
+            .select('_id history')
+            .populate({
+                path: 'history.workerId',
+                model: User,
+                select: 'fullName'
+            })
+            .lean();
+
+        const flaggedPiecesData = flaggedPieces.map(piece => {
+            const flaggedHistory = piece.history.filter(entry => entry.flagged === true);
+
+            return flaggedHistory.map(entry => ({
+                _id: piece._id,
+                worker: entry.workerId?.fullName,
+                issue: entry.notes
+            }));
+        }).flat();
+
+        const stages = await Stage.aggregate([
+            {
+                $lookup: {
+                    from: 'pieces',
+                    localField: '_id',
+                    foreignField: 'currentStage',
+                    as: 'pieces'
+                }
+            },
+            {
+                $addFields: {
+                    pieceCount: { $size: { $ifNull: ['$pieces', []] } }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    number: 1,
+                    pieceCount: 1
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    stages: { $push: "$$ROOT" },
+                    totalPieces: { $sum: "$pieceCount" }
+                }
+            },
+            {
+                $unwind: "$stages"
+            },
+            {
+                $project: {
+                    _id: "$stages._id",
+                    name: "$stages.name",
+                    number: "$stages.number",
+                    pieceCount: "$stages.pieceCount",
+                    totalPieces: 1
+                }
+            }
+        ]);
+
+
+        const orders = await Order.find({})
+            .sort({ _id: -1 })
+            .limit(5);
+
+
+        const data = {
+            flaggedPieces: flaggedPiecesData,
+            stages,
+            orders,
+            chartData: [
+                { day: "Mon", piece: 186 },
+                { day: "Tue", piece: 305 },
+                { day: "Wed", piece: 237 },
+                { day: "Thur", piece: 237 },
+                { day: "Fri", piece: 73 },
+                { day: "Sat", piece: 209 },
+                { day: "Sun", piece: 214 },
+            ]
+        }
+
+        res.status(200).json({
+            status: 'success',
+            data
+        });
+
+
+    } catch (err) {
+        res.status(400).json({
+            status: 'fail',
+            message: err.message
+        });
+    }
+};
+
 //Users
 export const getAllUsers = async (req, res) => {
     try {
@@ -39,7 +198,11 @@ export const getAllUsers = async (req, res) => {
 
 export const getUser = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await User.findById(req.params.id).populate({
+            path: 'stage',
+            model: Stage,
+            as: 'stage'
+        });
         if (!user) {
             return res.status(404).json({
                 status: 'fail',

@@ -1,5 +1,6 @@
 import Piece from '../models/Piece.js';
 import Stage from '../models/Stage.js';
+import User from '../models/User.js';
 
 export const getPieceById = async (req, res) => {
   try {
@@ -8,6 +9,9 @@ export const getPieceById = async (req, res) => {
       .populate({
         path: 'currentStage',
         model: Stage,
+      }).populate({
+        path: 'history.workerId',
+        model: User,
       });
 
     if (!piece) {
@@ -30,23 +34,22 @@ export const updatePieceHistory = async (req, res) => {
     const { stageNumber, notes, flagged } = req.body;
     const photoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
 
-    const piece = await Piece.findById(id);
+    const piece = await Piece.findById(id).populate({
+      path: 'currentStage',
+      model: Stage,
+    });
     if (!piece) {
       throw new Error('Piece not found');
     }
 
     const nextStage = await Stage.findOne({ number: { $gt: stageNumber } }).sort({ number: 1 });
 
-    if (!nextStage) {
-      throw new Error('Next ascending stage not found');
-    }
-
     const updatedPiece = await Piece.findOneAndUpdate(
       { _id: id },
       {
         $push: {
           history: {
-            stage: nextStage.number,
+            stage: nextStage ? nextStage.number : piece.currentStage.number,
             workerId: userId,
             timestamp: new Date(),
             photoUrl,
@@ -55,7 +58,7 @@ export const updatePieceHistory = async (req, res) => {
           },
         },
         $set: {
-          currentStage: nextStage._id,
+          currentStage: nextStage ? nextStage._id : piece.currentStage._id,
           flagged
         },
       },
