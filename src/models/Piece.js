@@ -28,12 +28,12 @@ const pieceSchema = new mongoose.Schema(
     },
     history: [
       {
-        stage: { type: Number, required: true },
-        workerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-        timestamp: { type: Date, required: true },
-        photoUrl: { type: String, required: true },
+        stage: { type: Number, required: false },
+        workerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
+        // timestamp: { type: Date, required: true },
+        photoUrl: { type: String, required: false },
         notes: { type: String },
-        flagged: { type: Boolean, required: true }
+        flagged: { type: Boolean, required: false }
       }
     ]
   },

@@ -4,68 +4,78 @@ import Stage from '../models/Stage.js';
 import Piece from '../models/Piece.js';
 import bcrypt from 'bcryptjs';
 
-
 export const getDashboardData = async (req, res) => {
     try {
-
         const currentDate = new Date();
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(currentDate.getDate() - 7);
 
-        // const completedPiecesByDay = await Piece.aggregate([
-        //     {
-        //         $match: {
-        //             status: 'Completed',
-        //             updatedAt: { $gte: oneWeekAgo }  // Filter completed pieces within the last week
-        //         }
-        //     },
-        //     {
-        //         $project: {
-        //             dayOfWeek: {
-        //                 $cond: {
-        //                     if: { $gte: [{ $type: '$updatedAt' }, 'date'] }, // Check if updatedAt is a valid date
-        //                     then: { $dayOfWeek: '$updatedAt' },
-        //                     else: null  // If updatedAt is invalid, set as null
-        //                 }
-        //             },
-        //             piecesCount: 1  // Keep the count field
-        //         }
-        //     },
-        //     {
-        //         $group: {
-        //             _id: '$dayOfWeek',  // Group by the day of the week
-        //             count: { $sum: 1 }  // Count how many pieces per day
-        //         }
-        //     },
-        //     {
-        //         $sort: { _id: 1 }  // Sort by day of the week (1 - Sunday, 7 - Saturday)
-        //     },
-        //     {
-        //         $project: {
-        //             day: {
-        //                 $switch: {  // Convert day of week number to day name
-        //                     branches: [
-        //                         { case: { $eq: ['$dayOfWeek', 1] }, then: 'Sun' },
-        //                         { case: { $eq: ['$dayOfWeek', 2] }, then: 'Mon' },
-        //                         { case: { $eq: ['$dayOfWeek', 3] }, then: 'Tue' },
-        //                         { case: { $eq: ['$dayOfWeek', 4] }, then: 'Wed' },
-        //                         { case: { $eq: ['$dayOfWeek', 5] }, then: 'Thu' },
-        //                         { case: { $eq: ['$dayOfWeek', 6] }, then: 'Fri' },
-        //                         { case: { $eq: ['$dayOfWeek', 7] }, then: 'Sat' }
-        //                     ],
-        //                     default: 'Unknown'
-        //                 }
-        //             },
-        //             piecesCount: '$count'  // The count of pieces per day
-        //         }
-        //     }
-        // ]);
-        // const result = completedPiecesByDay.map(item => ({
-        //     day: item.day,
-        //     piecesCount: item.piecesCount
-        // }));
+        const daysOfWeek = [
+            { _id: 1, day: 'Sun' },
+            { _id: 2, day: 'Mon' },
+            { _id: 3, day: 'Tue' },
+            { _id: 4, day: 'Wed' },
+            { _id: 5, day: 'Thu' },
+            { _id: 6, day: 'Fri' },
+            { _id: 7, day: 'Sat' }
+        ];
 
-        // console.log(result);
+        const completedPiecesByDay = await Piece.aggregate([
+            {
+                $match: {
+                    status: 'Completed',
+                    updatedAt: { $gte: oneWeekAgo }
+                }
+            },
+            {
+                $project: {
+                    updatedAt: 1,
+                    dayOfWeek: {
+                        $cond: {
+                            if: { $gte: [{ $type: '$updatedAt' }, 'date'] },
+                            then: { $dayOfWeek: '$updatedAt' },
+                            else: null
+                        }
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: '$dayOfWeek',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { _id: 1 }
+            },
+            {
+                $project: {
+                    day: {
+                        $switch: {
+                            branches: [
+                                { case: { $eq: ['$_id', 1] }, then: 'Sun' },
+                                { case: { $eq: ['$_id', 2] }, then: 'Mon' },
+                                { case: { $eq: ['$_id', 3] }, then: 'Tue' },
+                                { case: { $eq: ['$_id', 4] }, then: 'Wed' },
+                                { case: { $eq: ['$_id', 5] }, then: 'Thu' },
+                                { case: { $eq: ['$_id', 6] }, then: 'Fri' },
+                                { case: { $eq: ['$_id', 7] }, then: 'Sat' }
+                            ],
+                            default: 'Unknown'
+                        }
+                    },
+                    piecesCount: '$count'
+                }
+            }
+        ]);
+
+        const chartData = daysOfWeek.map(day => {
+            const foundDay = completedPiecesByDay.find(item => item.day === day.day);
+            return {
+                day: day.day,
+                piece: foundDay ? foundDay.piecesCount : 0
+            };
+        });
 
         const flaggedPieces = await Piece.find({ flagged: true })
             .select('_id history')
@@ -129,33 +139,26 @@ export const getDashboardData = async (req, res) => {
             }
         ]);
 
-
         const orders = await Order.find({})
             .sort({ _id: -1 })
             .limit(5);
 
+        const workers = await User.find({
+            role: "Worker"
+        })
 
         const data = {
             flaggedPieces: flaggedPiecesData,
             stages,
             orders,
-            chartData: [
-                { day: "Mon", piece: 186 },
-                { day: "Tue", piece: 305 },
-                { day: "Wed", piece: 237 },
-                { day: "Thur", piece: 237 },
-                { day: "Fri", piece: 73 },
-                { day: "Sat", piece: 209 },
-                { day: "Sun", piece: 214 },
-            ]
+            chartData,
+            workers
         }
 
         res.status(200).json({
             status: 'success',
             data
         });
-
-
     } catch (err) {
         res.status(400).json({
             status: 'fail',
@@ -253,9 +256,12 @@ export const updateUser = async (req, res) => {
             updateData.photoUrl = photoUrl;
         }
 
-        // Update other user fields from request body
-        Object.assign(updateData, req.body);
+        if (req.body.password && (req.body.role === 'Admin' || req.body.role === 'Manager')) {
+            const salt = await bcrypt.genSalt(10);
+            req.body.password = await bcrypt.hash(req.body.password, salt);
+        }
 
+        Object.assign(updateData, req.body);
         const user = await User.findByIdAndUpdate(
             req.params.id,
             updateData,
@@ -315,7 +321,7 @@ export const getAllOrders = async (req, res) => {
         const query = req.query;
         const queryObj = { ...query };
 
-        const orders = await Order.find(queryObj).skip(skip).limit(Limit);
+        const orders = await Order.find(queryObj).sort({ _id: -1 }).skip(skip).limit(Limit);
         res.status(200).json({
             status: 'success',
             results: orders.length,
@@ -341,9 +347,7 @@ export const getOrder = async (req, res) => {
         }
         res.status(200).json({
             status: 'success',
-            data: {
-                order
-            }
+            data: order
         });
     } catch (err) {
         res.status(400).json({
@@ -422,7 +426,6 @@ export const deleteOrder = async (req, res) => {
 //Stages
 export const createStage = async (req, res) => {
     try {
-
         const stageAlreadyExists = await Stage.findOne({
             number: req.body.number
         });
@@ -659,11 +662,10 @@ export const resolveFlaggedPiece = async (req, res) => {
         await piece.save();
         res.status(200).json({
             status: 'success',
-            data: {
-                piece
-            }
+            data: piece
         });
     } catch (err) {
+        console.log({ err })
         res.status(400).json({
             status: 'fail',
             message: err.message
