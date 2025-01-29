@@ -362,9 +362,7 @@ export const createOrder = async (req, res) => {
         const newOrder = await Order.create(req.body);
         res.status(201).json({
             status: 'success',
-            data: {
-                order: newOrder
-            }
+            data: newOrder
         });
     } catch (err) {
         res.status(400).json({
@@ -388,9 +386,7 @@ export const updateOrder = async (req, res) => {
         }
         res.status(200).json({
             status: 'success',
-            data: {
-                order
-            }
+            data: order
         });
     } catch (err) {
         res.status(400).json({
@@ -421,8 +417,6 @@ export const deleteOrder = async (req, res) => {
     }
 };
 
-
-
 //Stages
 export const createStage = async (req, res) => {
     try {
@@ -439,9 +433,7 @@ export const createStage = async (req, res) => {
         const newStage = await Stage.create(req.body);
         res.status(201).json({
             status: 'success',
-            data: {
-                stage: newStage
-            }
+            data: newStage
         });
     } catch (err) {
         res.status(400).json({
@@ -489,12 +481,10 @@ export const getStage = async (req, res) => {
 
 export const updateStage = async (req, res) => {
     try {
-        const stage = await Stage.findByIdAndUpdate
-
-            (req.params.id, req.body, {
-                new: true,
-                runValidators: true
-            });
+        const stage = await Stage.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
+        });
         if (!stage) {
             return res.status(404).json({
                 status: 'fail',
@@ -503,9 +493,7 @@ export const updateStage = async (req, res) => {
         }
         res.status(200).json({
             status: 'success',
-            data: {
-                stage
-            }
+            data: stage
         });
     }
     catch (err) {
@@ -557,9 +545,7 @@ export const assignStageToWorker = async (req, res) => {
         await user.save();
         res.status(200).json({
             status: 'success',
-            data: {
-                user
-            }
+            data: user
         });
     } catch (err) {
         res.status(400).json({
@@ -570,8 +556,72 @@ export const assignStageToWorker = async (req, res) => {
 }
 
 
-
 //Pieces
+export const createPiece = async (req, res) => {
+    try {
+        const stage = await Stage.find().sort({ number: 1 }).limit(1);
+        req.body.currentStage = stage[0]._id
+
+        req.body.history = []
+        const newPiece = await Piece.create(req.body);
+        res.status(201).json({
+            status: 'success',
+            data: newPiece
+        });
+    } catch (err) {
+        console.log({ err })
+        res.status(400).json({
+            status: 'fail',
+            message: err.message
+        });
+    }
+};
+
+export const updatePiece = async (req, res) => {
+    try {
+        const piece = await Piece.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
+        });
+        if (!piece) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'No Piece found with that ID'
+            });
+        }
+        res.status(200).json({
+            status: 'success',
+            data: piece
+        });
+    } catch (err) {
+        res.status(400).json({
+            status: 'fail',
+            message: err.message
+        });
+    }
+};
+
+export const getPiece = async (req, res) => {
+    try {
+        const piece = await Piece.findById(req.params.id).populate({
+            path: 'currentStage',
+            model: Stage,
+            as: 'currentStage'
+        })
+
+        res.status(200).json({
+            status: 'success',
+            data: piece
+        });
+    } catch (err) {
+        res.status(400).json({
+            status: 'fail',
+            message: err.message
+        });
+    }
+}
+
+
 export const getAllPieces = async (req, res) => {
     try {
         const Page = req.query.page * 1 || 1;
@@ -581,7 +631,7 @@ export const getAllPieces = async (req, res) => {
         const query = req.query;
         const queryObj = { ...query };
 
-        const pieces = await Piece.find(queryObj).skip(skip).limit(Limit).populate({
+        const pieces = await Piece.find(queryObj).sort({ _id: -1 }).skip(skip).limit(Limit).populate({
             path: 'currentStage',
             model: Stage,
             as: 'currentStage'
@@ -619,9 +669,7 @@ export const getPiecesGroupbyStage = async (req, res) => {
         res.status(200).json({
             status: 'success',
             results: pieces.length,
-            data: {
-                pieces
-            }
+            data: pieces
         });
     } catch (err) {
         res.status(400).json({
@@ -637,9 +685,7 @@ export const getFlaggedPieces = async (req, res) => {
         res.status(200).json({
             status: 'success',
             results: pieces.length,
-            data: {
-                pieces
-            }
+            data: pieces
         });
     } catch (err) {
         res.status(400).json({

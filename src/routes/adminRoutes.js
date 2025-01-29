@@ -1,5 +1,5 @@
 import express from 'express';
-import { getOrder, getAllOrders, createOrder, getAllUsers, createUser, getUser, updateUser, deleteUser, getAllStages, createStage, updateStage, getStage, deleteStage, assignStageToWorker, getFlaggedPieces, resolveFlaggedPiece, getPiecesGroupbyStage, getAllPieces, deletePiece, deleteOrder, updateOrder, getDashboardData } from '../controllers/adminController.js';
+import { getOrder, getAllOrders, createOrder, getAllUsers, createUser, getUser, updateUser, deleteUser, getAllStages, createStage, updateStage, getStage, deleteStage, assignStageToWorker, getFlaggedPieces, resolveFlaggedPiece, getPiecesGroupbyStage, getAllPieces, deletePiece, deleteOrder, updateOrder, getDashboardData, createPiece, updatePiece, getPiece } from '../controllers/adminController.js';
 import { validate } from '../middleware/validator.js';
 import { createUserValidationSchema, updateUserValidationSchema, createStageValidationSchema, updateStageValidationSchema } from '../utils/validators/adminValidations.js';
 import upload from '../middleware/upload.js';
@@ -28,10 +28,13 @@ router.delete('/stage/:id', deleteStage);
 
 router.put('/user/:id/assign-stage/:stageId', assignStageToWorker);
 
+router.post('/piece', createPiece);
 router.get('/piece', getAllPieces);
 router.get('/piece/flagged', getFlaggedPieces);
 router.put('/piece/flagged/:id/resolved', resolveFlaggedPiece);
 router.get('/piece/count', getPiecesGroupbyStage);
+router.get('/piece/:id', getPiece);
+router.put('/piece/:id', updatePiece);
 router.delete('/piece/:id', deletePiece);
 
 export default router;
