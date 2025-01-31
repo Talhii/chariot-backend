@@ -21,7 +21,6 @@ const orderSchema = new mongoose.Schema(
     },
     drawings: [
       {
-        refNumber: { type: String, required: true },
         url: { type: String, required: true }
       }
     ]

@@ -19,7 +19,7 @@ export const updateUserValidationSchema = Joi.object({
 });
 
 
-export const createStageValidationSchema = Joi.object({
+export const createSectionValidationSchema = Joi.object({
     number: Joi.number().required(),
     name: Joi.string().required(),
     checklist: Joi.array().items(Joi.object({
@@ -28,7 +28,7 @@ export const createStageValidationSchema = Joi.object({
     })).required()
 });
 
-export const updateStageValidationSchema = Joi.object({
+export const updateSectionValidationSchema = Joi.object({
     number: Joi.number(),
     name: Joi.string(),
     checklist: Joi.array().items(Joi.object({

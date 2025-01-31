@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const stageSchema = new mongoose.Schema(
+const sectionSchema = new mongoose.Schema(
   {
     number: {
       type: Number,
@@ -23,6 +23,6 @@ const stageSchema = new mongoose.Schema(
   }
 );
 
-const Stage = mongoose.model('Stage', stageSchema);
+const Section = mongoose.model('Section', sectionSchema);
 
-export default Stage;
+export default Section;

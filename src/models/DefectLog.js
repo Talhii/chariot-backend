@@ -6,7 +6,7 @@ const defectLogSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    stage: {
+    section: {
       type: Number,
       required: true
     },

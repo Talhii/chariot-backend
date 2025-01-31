@@ -1,8 +1,10 @@
 import Order from '../models/Order.js';
 import User from '../models/User.js';
-import Stage from '../models/Stage.js';
+import Section from '../models/Section.js';
 import Piece from '../models/Piece.js';
 import bcrypt from 'bcryptjs';
+import fs from "fs"
+import { csvToJson } from '../utils/csv-to-json.js';
 
 export const getDashboardData = async (req, res) => {
     try {
@@ -96,12 +98,12 @@ export const getDashboardData = async (req, res) => {
             }));
         }).flat();
 
-        const stages = await Stage.aggregate([
+        const sections = await Section.aggregate([
             {
                 $lookup: {
                     from: 'pieces',
                     localField: '_id',
-                    foreignField: 'currentStage',
+                    foreignField: 'currentSectionId',
                     as: 'pieces'
                 }
             },
@@ -121,19 +123,19 @@ export const getDashboardData = async (req, res) => {
             {
                 $group: {
                     _id: null,
-                    stages: { $push: "$$ROOT" },
+                    sections: { $push: "$$ROOT" },
                     totalPieces: { $sum: "$pieceCount" }
                 }
             },
             {
-                $unwind: "$stages"
+                $unwind: "$sections"
             },
             {
                 $project: {
-                    _id: "$stages._id",
-                    name: "$stages.name",
-                    number: "$stages.number",
-                    pieceCount: "$stages.pieceCount",
+                    _id: "$sections._id",
+                    name: "$sections.name",
+                    number: "$sections.number",
+                    pieceCount: "$sections.pieceCount",
                     totalPieces: 1
                 }
             }
@@ -149,7 +151,7 @@ export const getDashboardData = async (req, res) => {
 
         const data = {
             flaggedPieces: flaggedPiecesData,
-            stages,
+            sections,
             orders,
             chartData,
             workers
@@ -202,9 +204,8 @@ export const getAllUsers = async (req, res) => {
 export const getUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id).populate({
-            path: 'stage',
-            model: Stage,
-            as: 'stage'
+            path: 'section',
+            model: Section,
         });
         if (!user) {
             return res.status(404).json({
@@ -359,12 +360,31 @@ export const getOrder = async (req, res) => {
 
 export const createOrder = async (req, res) => {
     try {
-        const newOrder = await Order.create(req.body);
-        res.status(201).json({
-            status: 'success',
-            data: newOrder
-        });
+        if (req.files.length > 0) {
+            const imageUrls = req.files.map((file) => {
+                const photoUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+                return { url: photoUrl, };
+            });
+
+            req.body.drawings = imageUrls;
+            const newOrder = await Order.create(req.body);
+
+            const section = await Section.find().sort({ number: 1 }).limit(1);
+
+            await Piece.create({
+                orderId: newOrder._id,
+                currentSectionId: section[0]._id,
+                status: "Pending",
+                history: []
+            })
+
+            res.status(201).json({
+                status: 'success',
+                data: newOrder
+            });
+        }
     } catch (err) {
+        console.log({err})
         res.status(400).json({
             status: 'fail',
             message: err.message
@@ -417,23 +437,23 @@ export const deleteOrder = async (req, res) => {
     }
 };
 
-//Stages
-export const createStage = async (req, res) => {
+//Sections
+export const createSection = async (req, res) => {
     try {
-        const stageAlreadyExists = await Stage.findOne({
+        const sectionAlreadyExists = await Section.findOne({
             number: req.body.number
         });
 
-        if (stageAlreadyExists) {
+        if (sectionAlreadyExists) {
             return res.status(400).json({
                 status: 'fail',
-                message: 'Stage with that number already exists'
+                message: 'Section with that number already exists'
             });
         }
-        const newStage = await Stage.create(req.body);
+        const newSection = await Section.create(req.body);
         res.status(201).json({
             status: 'success',
-            data: newStage
+            data: newSection
         });
     } catch (err) {
         res.status(400).json({
@@ -443,12 +463,12 @@ export const createStage = async (req, res) => {
     }
 }
 
-export const getAllStages = async (req, res) => {
+export const getAllSections = async (req, res) => {
     try {
-        const stages = await Stage.find();
+        const sections = await Section.find();
         res.status(200).json({
             status: 'success',
-            data: stages
+            data: sections
         });
     } catch (err) {
         res.status(400).json({
@@ -458,18 +478,18 @@ export const getAllStages = async (req, res) => {
     }
 }
 
-export const getStage = async (req, res) => {
+export const getSection = async (req, res) => {
     try {
-        const stage = await Stage.findById(req.params.id);
-        if (!stage) {
+        const section = await Section.findById(req.params.id);
+        if (!section) {
             return res.status(404).json({
                 status: 'fail',
-                message: 'No stage found with that ID'
+                message: 'No section found with that ID'
             });
         }
         res.status(200).json({
             status: 'success',
-            data: stage
+            data: section
         });
     } catch (err) {
         res.status(400).json({
@@ -479,21 +499,21 @@ export const getStage = async (req, res) => {
     }
 }
 
-export const updateStage = async (req, res) => {
+export const updateSection = async (req, res) => {
     try {
-        const stage = await Stage.findByIdAndUpdate(req.params.id, req.body, {
+        const section = await Section.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true
         });
-        if (!stage) {
+        if (!section) {
             return res.status(404).json({
                 status: 'fail',
-                message: 'No stage found with that ID'
+                message: 'No section found with that ID'
             });
         }
         res.status(200).json({
             status: 'success',
-            data: stage
+            data: section
         });
     }
     catch (err) {
@@ -504,13 +524,13 @@ export const updateStage = async (req, res) => {
     }
 }
 
-export const deleteStage = async (req, res) => {
+export const deleteSection = async (req, res) => {
     try {
-        const stage = await Stage.findByIdAndDelete(req.params.id);
-        if (!stage) {
+        const section = await Section.findByIdAndDelete(req.params.id);
+        if (!section) {
             return res.status(404).json({
                 status: 'fail',
-                message: 'No stage found with that ID'
+                message: 'No section found with that ID'
             });
         }
         res.status(200).json({
@@ -525,7 +545,7 @@ export const deleteStage = async (req, res) => {
     }
 }
 
-export const assignStageToWorker = async (req, res) => {
+export const assignSectionToWorker = async (req, res) => {
     try {
         const user = await User.findById(req.params.userId);
         if (!user) {
@@ -534,14 +554,14 @@ export const assignStageToWorker = async (req, res) => {
                 message: 'No user found with that ID'
             });
         }
-        const stage = await Stage.findById(req.params.stageId);
-        if (!stage) {
+        const section = await Section.findById(req.params.sectionId);
+        if (!section) {
             return res.status(404).json({
                 status: 'fail',
-                message: 'No stage found with that ID'
+                message: 'No section found with that ID'
             });
         }
-        user.stage = stage._id;
+        user.section = section._id;
         await user.save();
         res.status(200).json({
             status: 'success',
@@ -559,8 +579,8 @@ export const assignStageToWorker = async (req, res) => {
 //Pieces
 export const createPiece = async (req, res) => {
     try {
-        const stage = await Stage.find().sort({ number: 1 }).limit(1);
-        req.body.currentStage = stage[0]._id
+        const section = await Section.find().sort({ number: 1 }).limit(1);
+        req.body.currentSectionId = section[0]._id
 
         req.body.history = []
         const newPiece = await Piece.create(req.body);
@@ -604,9 +624,8 @@ export const updatePiece = async (req, res) => {
 export const getPiece = async (req, res) => {
     try {
         const piece = await Piece.findById(req.params.id).populate({
-            path: 'currentStage',
-            model: Stage,
-            as: 'currentStage'
+            path: 'currentSectionId',
+            model: Section,
         })
 
         res.status(200).json({
@@ -632,13 +651,11 @@ export const getAllPieces = async (req, res) => {
         const queryObj = { ...query };
 
         const pieces = await Piece.find(queryObj).sort({ _id: -1 }).skip(skip).limit(Limit).populate({
-            path: 'currentStage',
-            model: Stage,
-            as: 'currentStage'
+            path: 'currentSectionId',
+            model: Section,
         }).populate({
             path: 'orderId',
             model: Order,
-            as: 'order'
         })
 
         const pieceCount = await Piece.countDocuments(queryObj);
@@ -656,12 +673,12 @@ export const getAllPieces = async (req, res) => {
     }
 }
 
-export const getPiecesGroupbyStage = async (req, res) => {
+export const getPiecesGroupbySection = async (req, res) => {
     try {
         const pieces = await Piece.aggregate([
             {
                 $group: {
-                    _id: '$currentStage',
+                    _id: '$currentSectionId',
                     count: { $sum: 1 }
                 }
             }
@@ -741,5 +758,11 @@ export const deletePiece = async (req, res) => {
 }
 
 
+export const mockApi = async (req, res) => {
+    const jsonData = await csvToJson('output.csv')
 
-
+    res.status(200).json({
+        status: 'success',
+        data: jsonData
+    });
+}

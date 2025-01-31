@@ -3,34 +3,17 @@ import mongoose from 'mongoose';
 const pieceSchema = new mongoose.Schema(
   {
     orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true },
-    refNumber: {
-      type: String,
-      required: true,
-      unique: true
-    },
-    dimensions: {
-      type: String,
-      required: true
-    },
-    currentStage: { type: mongoose.Schema.Types.ObjectId, ref: 'Stage', required: true },
+    currentSectionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Section', required: true },
     status: {
       type: String,
-      // enum: ['Pending', 'InProgress', 'Flagged', 'Completed'],
-      required: true
-    },
-    qrCode: {
-      type: String,
-      required: true
-    },
-    flagged: {
-      type: Boolean,
+      enum: ['Pending', 'InProgress', 'Flagged', 'Completed'],
       required: true
     },
     history: [
       {
-        stage: { type: mongoose.Schema.Types.ObjectId, ref: 'Stage', required: true },
+        section: { type: mongoose.Schema.Types.ObjectId, ref: 'Section', required: false },
         workerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
-        // timestamp: { type: Date, required: true },
+        timestamp: { type: Date, required: false },
         photoUrl: { type: String, required: false },
         notes: { type: String },
         flagged: { type: Boolean, required: false }
