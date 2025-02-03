@@ -3,10 +3,14 @@ import mongoose from 'mongoose';
 const pieceSchema = new mongoose.Schema(
   {
     orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true },
+    number: {
+      type: Number,
+      required: true
+    },
     currentSectionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Section', required: true },
     status: {
       type: String,
-      enum: ['Pending', 'InProgress', 'Flagged', 'Completed'],
+      enum: ['InProgress', 'Flagged', 'Completed'],
       required: true
     },
     history: [

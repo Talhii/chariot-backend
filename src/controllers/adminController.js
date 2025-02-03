@@ -367,16 +367,8 @@ export const createOrder = async (req, res) => {
             });
 
             req.body.drawings = imageUrls;
+            req.body.status = "InProgress"
             const newOrder = await Order.create(req.body);
-
-            const section = await Section.find().sort({ number: 1 }).limit(1);
-
-            await Piece.create({
-                orderId: newOrder._id,
-                currentSectionId: section[0]._id,
-                status: "Pending",
-                history: []
-            })
 
             res.status(201).json({
                 status: 'success',

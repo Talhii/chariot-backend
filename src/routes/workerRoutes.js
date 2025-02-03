@@ -1,16 +1,16 @@
 import express from 'express';
-import { getPieceById, getPieces, updatePieceHistory } from '../controllers/workerController.js';
+import { getOrders, getPieceById, upsertPieceDetail } from '../controllers/workerController.js';
 import { upload } from '../middleware/upload.js';
-import { updatePieceHistoryValidationSchema } from '../utils/validators/workerValidations.js';
+import { upsertPieceDetailValidationSchema } from '../utils/validators/workerValidations.js';
 import { validate } from '../middleware/validator.js';
 import { authenticateToken } from "../middleware/auth.js"
 
 const router = express.Router();
 
 
-
-router.get('/piece/', getPieces);
+router.get('/order', getOrders);
+router.get('/piece', getPieceById);
+router.post('/piece', [authenticateToken, upload, validate(upsertPieceDetailValidationSchema)], upsertPieceDetail);
 router.get('/piece/:id', getPieceById);
-router.put('/piece/:id', [authenticateToken, upload, validate(updatePieceHistoryValidationSchema)], updatePieceHistory);
 
 export default router;
