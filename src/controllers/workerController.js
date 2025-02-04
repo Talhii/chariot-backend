@@ -46,7 +46,7 @@ export const getOrders = async (req, res) => {
       orders.map(async (order) => {
         let inComingPieces = [];
 
-        const currentPieces = await Piece.find({ orderId: order._id, currentSectionId: section._id })
+        const currentPieces = await Piece.find({ status: "InProgress", orderId: order._id, currentSectionId: section._id })
           .populate({
             path: 'currentSectionId',
             model: Section,
@@ -54,13 +54,17 @@ export const getOrders = async (req, res) => {
           .populate({
             path: 'history.workerId',
             model: User,
+          })
+          .populate({
+            path: 'history.section',
+            model: Section,
           });
 
         if (sectionNumber != 1) {
           const sections = await Section.find({ number: { $lt: sectionNumber } }).sort({ number: 1 });
 
           const sectionIds = sections.map(section => section._id);
-          inComingPieces = await Piece.find({ orderId: order._id, currentSectionId: { $in: sectionIds } })
+          inComingPieces = await Piece.find({ status: "InProgress", orderId: order._id, currentSectionId: { $in: sectionIds } })
             .populate({
               path: 'currentSectionId',
               model: Section,
@@ -68,6 +72,10 @@ export const getOrders = async (req, res) => {
             .populate({
               path: 'history.workerId',
               model: User,
+            })
+            .populate({
+              path: 'history.section',
+              model: Section,
             });
         }
 
@@ -79,11 +87,7 @@ export const getOrders = async (req, res) => {
       })
     );
 
-    const piecesCount = await Piece.countDocuments({ currentSectionId: section._id })
-      .populate({
-        path: 'currentSectionId',
-        model: Section,
-      });
+    const piecesCount = await Piece.countDocuments({ status: "InProgress", currentSectionId: section._id });
 
     res.status(200).json({
       status: 'success',
@@ -100,7 +104,6 @@ export const getOrders = async (req, res) => {
     });
   }
 };
-
 
 export const upsertPieceDetail = async (req, res) => {
   try {
@@ -189,3 +192,32 @@ export const upsertPieceDetail = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const flagPiece = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const piece = await Piece.findOne({ _id: id });
+
+    if (!piece) {
+      throw new Error('Piece not found');
+    }
+
+    await Piece.findOneAndUpdate(
+      { _id: id },
+      {
+        $set: {
+          status: "Flagged"
+        },
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      status: 'success',
+      data: piece
+    });
+  } catch (error) {
+    res.status(404).json({ message: error.message });
+  }
+}
+

@@ -376,7 +376,7 @@ export const createOrder = async (req, res) => {
             });
         }
     } catch (err) {
-        console.log({err})
+        console.log({ err })
         res.status(400).json({
             status: 'fail',
             message: err.message
@@ -386,6 +386,14 @@ export const createOrder = async (req, res) => {
 
 export const updateOrder = async (req, res) => {
     try {
+        if (req.files.length > 0) {
+            const imageUrls = req.files.map((file) => {
+                const photoUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+                return { url: photoUrl, };
+            });
+
+            req.body.drawings = imageUrls;
+        }
         const order = await Order.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true
@@ -618,7 +626,14 @@ export const getPiece = async (req, res) => {
         const piece = await Piece.findById(req.params.id).populate({
             path: 'currentSectionId',
             model: Section,
+        }).populate({
+            path: 'history.workerId',
+            model: User,
         })
+            .populate({
+                path: 'history.section',
+                model: Section,
+            });
 
         res.status(200).json({
             status: 'success',

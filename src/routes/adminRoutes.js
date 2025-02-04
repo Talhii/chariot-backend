@@ -9,7 +9,7 @@ router.get('/dashboard', getDashboardData)
 
 router.get('/order', getAllOrders);
 router.post('/order', uploadMultiple, createOrder);
-router.put('/order/:id', updateOrder);
+router.put('/order/:id', uploadMultiple, updateOrder);
 router.get('/order/:id', getOrder);
 router.delete('/order/:id', deleteOrder);
 
