@@ -15,6 +15,7 @@ router.delete('/order/:id', deleteOrder);
 
 router.get('/user', getAllUsers);
 router.post('/user', [upload, validate(createUserValidationSchema)], createUser);
+router.put('/user/:id/assign/:sectionId', assignSectionToWorker);
 router.put('/user/:id', [upload, validate(updateUserValidationSchema)], updateUser);
 router.get('/user/:id', getUser);
 router.delete('/user/:id', deleteUser);
@@ -25,7 +26,6 @@ router.put('/section/:id', validate(updateSectionValidationSchema), updateSectio
 router.get('/section/:id', getSection);
 router.delete('/section/:id', deleteSection);
 
-router.put('/user/:id/assign-section/:sectionId', assignSectionToWorker);
 
 router.post('/piece', createPiece);
 router.get('/piece', getAllPieces);

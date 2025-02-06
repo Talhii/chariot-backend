@@ -8,6 +8,7 @@ export const createUserValidationSchema = Joi.object({
     username: Joi.string().when('role', { is: Joi.string().valid('Admin', 'Manager'), then: Joi.required() }),
     password: Joi.string().when('role', { is: Joi.string().valid('Admin', 'Manager'), then: Joi.required() }),
     accessCode: Joi.string().when('role', { is: 'Worker', then: Joi.required() }),
+    section: Joi.string().when('role', { is: 'Worker', then: Joi.required() }),
 });
 
 export const updateUserValidationSchema = Joi.object({
@@ -15,7 +16,8 @@ export const updateUserValidationSchema = Joi.object({
     role: Joi.string(),
     username: Joi.string(),
     password: Joi.string(),
-    accessCode: Joi.string()
+    accessCode: Joi.string(),
+    section: Joi.string()
 });
 
 

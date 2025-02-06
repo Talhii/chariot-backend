@@ -79,24 +79,16 @@ export const getDashboardData = async (req, res) => {
             };
         });
 
-        const flaggedPieces = await Piece.find({ flagged: true })
-            .select('_id history')
+        const flaggedPieces = await Piece.find({ status: "Flagged" })
             .populate({
                 path: 'history.workerId',
                 model: User,
                 select: 'fullName'
             })
-            .lean();
-
-        const flaggedPiecesData = flaggedPieces.map(piece => {
-            const flaggedHistory = piece.history.filter(entry => entry.flagged === true);
-
-            return flaggedHistory.map(entry => ({
-                _id: piece._id,
-                worker: entry.workerId?.fullName,
-                issue: entry.notes
-            }));
-        }).flat();
+            .populate({
+                path: 'currentSectionId',
+                model: Section,
+            });
 
         const sections = await Section.aggregate([
             {
@@ -150,7 +142,7 @@ export const getDashboardData = async (req, res) => {
         })
 
         const data = {
-            flaggedPieces: flaggedPiecesData,
+            flaggedPieces,
             sections,
             orders,
             chartData,
@@ -547,7 +539,7 @@ export const deleteSection = async (req, res) => {
 
 export const assignSectionToWorker = async (req, res) => {
     try {
-        const user = await User.findById(req.params.userId);
+        const user = await User.findById(req.params.id);
         if (!user) {
             return res.status(404).json({
                 status: 'fail',
