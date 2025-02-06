@@ -140,13 +140,25 @@ export const getDashboardData = async (req, res) => {
         const workers = await User.find({
             role: "Worker"
         })
+        
+
+        const pieceCount = await Piece.countDocuments();
+        const flaggedPiecesCount = await Piece.countDocuments({status: "Flagged"})
+        const totalOrdersCount = await Order.countDocuments()
+        const pendingOrdersCount = await Order.countDocuments({status: "InProgress"})
 
         const data = {
             flaggedPieces,
             sections,
             orders,
             chartData,
-            workers
+            workers,
+            counts: {
+                pieceCount,
+                flaggedPiecesCount,
+                totalOrdersCount,
+                pendingOrdersCount
+            }
         }
 
         res.status(200).json({
@@ -720,7 +732,7 @@ export const resolveFlaggedPiece = async (req, res) => {
                 message: 'No piece found with that ID'
             });
         }
-        piece.flagged = false;
+        piece.status = "InProgress";
         await piece.save();
         res.status(200).json({
             status: 'success',

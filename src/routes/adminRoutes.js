@@ -26,11 +26,10 @@ router.put('/section/:id', validate(updateSectionValidationSchema), updateSectio
 router.get('/section/:id', getSection);
 router.delete('/section/:id', deleteSection);
 
-
 router.post('/piece', createPiece);
 router.get('/piece', getAllPieces);
 router.get('/piece/flagged', getFlaggedPieces);
-router.put('/piece/flagged/:id/resolved', resolveFlaggedPiece);
+router.put('/piece/:id/resolve', resolveFlaggedPiece);
 router.get('/piece/count', getPiecesGroupbySection);
 router.get('/piece/:id', getPiece);
 router.put('/piece/:id', updatePiece);
