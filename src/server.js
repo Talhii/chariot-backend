@@ -11,6 +11,7 @@ import bodyParser from 'body-parser';
 
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { authenticateToken } from './middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,7 +21,7 @@ dotenv.config();
 const app = express();
 
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://192.168.100.114:3000'], 
+  origin: ['http://localhost:3000', 'http://192.168.100.114:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
@@ -32,11 +33,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 connectDB().catch((error) => {
   console.error('Error connecting to database:', error);
-  process.exit(1); 
-}); 
+  process.exit(1);
+});
 
-app.use('/api/worker', workerRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/worker', authenticateToken, workerRoutes);
+app.use('/api/admin', authenticateToken, adminRoutes);
 app.use('/api', commonRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

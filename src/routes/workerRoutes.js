@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.get('/order', getOrders);
 router.get('/piece', getPieceById);
-router.post('/piece', [authenticateToken, upload, validate(upsertPieceDetailValidationSchema)], upsertPieceDetail);
+router.post('/piece', [upload, validate(upsertPieceDetailValidationSchema)], upsertPieceDetail);
 router.post('/piece/flag/:id', flagPiece)
 router.get('/piece/:id', getPieceById);
 

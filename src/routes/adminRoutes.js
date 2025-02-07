@@ -1,5 +1,5 @@
 import express from 'express';
-import { getOrder, getAllOrders, createOrder, getAllUsers, createUser, getUser, updateUser, deleteUser, getAllSections, createSection, updateSection, getSection, deleteSection, assignSectionToWorker, getFlaggedPieces, resolveFlaggedPiece, getPiecesGroupbySection, getAllPieces, deletePiece, deleteOrder, updateOrder, getDashboardData, createPiece, updatePiece, getPiece, mockApi } from '../controllers/adminController.js';
+import { getOrder, getAllOrders, createOrder, getAllUsers, createUser, getUser, updateUser, deleteUser, getAllSections, createSection, updateSection, getSection, deleteSection, assignSectionToWorker, getFlaggedPieces, resolveFlaggedPiece, getPiecesGroupbySection, getAllPieces, deletePiece, deleteOrder, updateOrder, getDashboardData, createPiece, updatePiece, getPiece } from '../controllers/adminController.js';
 import { validate } from '../middleware/validator.js';
 import { createUserValidationSchema, updateUserValidationSchema, createSectionValidationSchema, updateSectionValidationSchema } from '../utils/validators/adminValidations.js';
 import { upload, uploadMultiple } from '../middleware/upload.js';
@@ -34,7 +34,5 @@ router.get('/piece/count', getPiecesGroupbySection);
 router.get('/piece/:id', getPiece);
 router.put('/piece/:id', updatePiece);
 router.delete('/piece/:id', deletePiece);
-
-router.post('/mock', mockApi)
 
 export default router;

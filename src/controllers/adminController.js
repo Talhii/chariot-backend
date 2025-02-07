@@ -143,9 +143,9 @@ export const getDashboardData = async (req, res) => {
         
 
         const pieceCount = await Piece.countDocuments();
-        const flaggedPiecesCount = await Piece.countDocuments({status: "Flagged"})
+        const flaggedPiecesCount = await Piece.countDocuments({ status: "Flagged" })
         const totalOrdersCount = await Order.countDocuments()
-        const pendingOrdersCount = await Order.countDocuments({status: "InProgress"})
+        const pendingOrdersCount = await Order.countDocuments({ status: "InProgress" })
 
         const data = {
             flaggedPieces,
@@ -766,14 +766,4 @@ export const deletePiece = async (req, res) => {
             message: err.message
         });
     }
-}
-
-
-export const mockApi = async (req, res) => {
-    const jsonData = await csvToJson('output.csv')
-
-    res.status(200).json({
-        status: 'success',
-        data: jsonData
-    });
 }
