@@ -4,6 +4,7 @@ import Section from '../models/Section.js';
 import Piece from '../models/Piece.js';
 import bcrypt from 'bcryptjs';
 import fs from "fs"
+import xlsx from 'xlsx';
 import { csvToJson } from '../utils/csv-to-json.js';
 
 export const getDashboardData = async (req, res) => {
@@ -140,7 +141,7 @@ export const getDashboardData = async (req, res) => {
         const workers = await User.find({
             role: "Worker"
         })
-        
+
 
         const pieceCount = await Piece.countDocuments();
         const flaggedPiecesCount = await Piece.countDocuments({ status: "Flagged" })
@@ -364,14 +365,43 @@ export const getOrder = async (req, res) => {
 
 export const createOrder = async (req, res) => {
     try {
-        if (req.files.length > 0) {
-            const imageUrls = req.files.map((file) => {
-                const photoUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
-                return { url: photoUrl, };
-            });
+        let extractedData = [];
+        let fileUrls = [];
 
-            req.body.drawings = imageUrls;
-            req.body.status = "InProgress"
+        if (req.files.length > 0) {
+            for (const file of req.files) {
+                const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+                if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.mimetype === 'application/vnd.ms-excel') {
+                    const workbook = xlsx.readFile(file.path);
+                    const sheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[sheetName];
+                    if (sheet) {
+                        const jsonData = xlsx.utils.sheet_to_json(sheet);
+                        const headerRow = jsonData.find(row => Object.values(row).includes("CODE") && Object.values(row).includes("No. of Pc"));
+                        if (headerRow) {
+                            const codeKey = Object.keys(headerRow).find(key => headerRow[key] === "CODE");
+                            const noOfPieceKey = Object.keys(headerRow).find(key => headerRow[key] === "No. of Pc");
+
+                            const headerIndex = jsonData.indexOf(headerRow);
+                            const dataRows = jsonData.slice(headerIndex + 1);
+
+                            extractedData = dataRows.map(row => ({
+                                code: row[codeKey] ? row[codeKey].replace(/\s+/g, "") : "", 
+                                noOfPiece: row[noOfPieceKey]
+                            })).filter(item => item.code && item.noOfPiece);
+                        }
+
+                    }
+                    fs.unlinkSync(file.path);
+                } else {
+                    fileUrls.push({ url: fileUrl });
+                }
+            }
+
+            req.body.drawings = fileUrls;
+            req.body.takeOffData = extractedData;
+            req.body.status = "InProgress";
+
             const newOrder = await Order.create(req.body);
 
             res.status(201).json({
@@ -380,7 +410,7 @@ export const createOrder = async (req, res) => {
             });
         }
     } catch (err) {
-        console.log({ err })
+        console.log({ err });
         res.status(400).json({
             status: 'fail',
             message: err.message

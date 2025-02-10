@@ -3,10 +3,8 @@ import { flagPiece, getOrders, getPieceById, upsertPieceDetail } from '../contro
 import { upload } from '../middleware/upload.js';
 import { upsertPieceDetailValidationSchema } from '../utils/validators/workerValidations.js';
 import { validate } from '../middleware/validator.js';
-import { authenticateToken } from "../middleware/auth.js"
 
 const router = express.Router();
-
 
 router.get('/order', getOrders);
 router.get('/piece', getPieceById);

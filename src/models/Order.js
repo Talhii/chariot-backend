@@ -23,6 +23,12 @@ const orderSchema = new mongoose.Schema(
       {
         url: { type: String, required: true }
       }
+    ],
+    takeOffData: [
+      {
+        code: { type: String, required: false },
+        noOfPiece: { type: String, required: false }
+      },
     ]
   },
   {

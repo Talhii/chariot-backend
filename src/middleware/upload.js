@@ -33,7 +33,7 @@ const uploadMultiple = multer({
 
 
 function checkFileType(file, cb) {
-    const allowedTypes = /jpeg|jpg|png|gif|pdf/; // Allowed image and PDF types
+    const allowedTypes = /jpeg|jpg|png|gif|pdf|xlsx/; // Allowed image and PDF types
     const isValid = allowedTypes.test(path.extname(file.originalname).toLowerCase()) || allowedTypes.test(file.mimetype);
   
     if (isValid) {

@@ -7,6 +7,10 @@ const pieceSchema = new mongoose.Schema(
       type: Number,
       required: true
     },
+    code: {
+      type: String,
+      required: true 
+    },
     currentSectionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Section', required: true },
     status: {
       type: String,
