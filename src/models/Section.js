@@ -8,7 +8,6 @@ const sectionSchema = new mongoose.Schema(
     },
     name: {
       type: String,
-      // enum: ['Cutting', 'Sink Cutout', 'Polishing Top', 'Sink and Edge Polishing', 'QC'],
       required: true
     },
     checklist: [

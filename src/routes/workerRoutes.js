@@ -10,6 +10,6 @@ router.get('/order', getOrders);
 router.get('/piece', getPieceById);
 router.post('/piece', [upload, validate(upsertPieceDetailValidationSchema)], upsertPieceDetail);
 router.post('/piece/flag/:id', flagPiece)
-router.get('/piece/:id', getPieceById);
+router.get('/piece/:code/:number', getPieceById);
 
 export default router;

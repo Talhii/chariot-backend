@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
 
 dotenv.config();
-// Array of seed data for sections
 const sectionsData = [
   {
     number: 1,
@@ -48,7 +47,6 @@ const sectionsData = [
   }
 ];
 
-// MongoDB seeder function
 const seedDatabase = async () => {
   try {
     connectDB().catch((error) => {
@@ -57,22 +55,17 @@ const seedDatabase = async () => {
     });
 
     console.log('Connected to MongoDB.');
-
-    // Check if any sections already exist
     const existingSections = await Section.find({});
 
     if (existingSections.length > 0) {
       console.log('Sections already exist. Seeder will not run.');
       mongoose.connection.close();
-      return; // Exit the function if sections already exist
+      return;
     }
 
-    // Insert new sections
     await Section.insertMany(sectionsData);
 
     console.log('Sections seeded successfully!');
-
-    // Close the connection
     mongoose.connection.close();
   } catch (error) {
     console.error('Error seeding the database:', error);
@@ -80,5 +73,4 @@ const seedDatabase = async () => {
   }
 };
 
-// Run the seeder
 seedDatabase();

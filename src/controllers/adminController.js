@@ -386,7 +386,7 @@ export const createOrder = async (req, res) => {
                             const dataRows = jsonData.slice(headerIndex + 1);
 
                             extractedData = dataRows.map(row => ({
-                                code: row[codeKey] ? row[codeKey].replace(/\s+/g, "") : "", 
+                                code: row[codeKey] ? row[codeKey].replace(/\s+/g, "") : "",
                                 noOfPiece: row[noOfPieceKey]
                             })).filter(item => item.code && item.noOfPiece);
                         }
@@ -663,11 +663,10 @@ export const getPiece = async (req, res) => {
         }).populate({
             path: 'history.workerId',
             model: User,
-        })
-            .populate({
-                path: 'history.section',
-                model: Section,
-            });
+        }).populate({
+            path: 'history.section',
+            model: Section,
+        });
 
         res.status(200).json({
             status: 'success',

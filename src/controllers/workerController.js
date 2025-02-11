@@ -6,8 +6,8 @@ import Tesseract from "tesseract.js";
 
 export const getPieceById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const piece = await Piece.findOne({ _id: id })
+    const { code, number } = req.params;
+    const piece = await Piece.findOne({ code, number })
       .populate({
         path: 'currentSectionId',
         model: Section,
@@ -106,40 +106,29 @@ export const getOrders = async (req, res) => {
 };
 
 export const upsertPieceDetail = async (req, res) => {
+  const { pieceId, orderId } = req.query;
+  const userId = req.user.id;
+  const { sectionNumber } = req.body;
+
   try {
-    // Tesseract.recognize(req.file.path, "eng")
-    //   .then(({ data: { text } }) => {
-    //     text = text.replace(/\s+/g, "");
-    //     text = text.replace(/\\/g, "1");
-
-    //     text = text.replace(/(K5|V5|S-KS|S-VS|S-K|S-V|V-S|K-S|S-MR)/g, match => {
-    //       return {
-    //         "K5": "KS",
-    //         "V5": "VS",
-    //         "S-KS": "5-KS",
-    //         "S-VS": "5-VS",
-    //         "S-K": "5-K",
-    //         "S-V": "5-V",
-    //         "V-S": "V-5",
-    //         "K-S": "K-5",
-    //         "S-MR": "5-MR"
-    //       }[match];
-    //     });
-
-
-    //     console.log(text)
-    //   })
-    //   .catch(error => console.error(error));
-
-
-    const { pieceId, orderId } = req.query;
-    const userId = req.user.id;
-    const { sectionNumber, code } = req.body;
     const photoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-
     let nextSection = await Section.findOne({ number: { $gt: sectionNumber } }).sort({ number: 1 });
 
     if (sectionNumber == 1) {
+      const { data: { text } } = await Tesseract.recognize(req.file.path, "eng");
+      let cleanedText = text.replace(/\s+/g, "").replace(/\\/g, "1");
+      let code = cleanedText.replace(/(K5|V5|S-KS|S-VS|S-K|S-V|V-S|K-S|S-MR)/g, match => ({
+        "K5": "KS",
+        "V5": "VS",
+        "S-KS": "5-KS",
+        "S-VS": "5-VS",
+        "S-K": "5-K",
+        "S-V": "5-V",
+        "V-S": "V-5",
+        "K-S": "K-5",
+        "S-MR": "5-MR",
+      }[match]));
+
       if (!(code.includes('VS') || code.includes('KS'))) {
         nextSection = await Section.findOne({ number: 3 });
       }
@@ -152,12 +141,12 @@ export const upsertPieceDetail = async (req, res) => {
         return res.status(400).json({ status: 'complete', message: 'All pieces for this code are completed' });
       }
 
-      const piece = await Piece.find({ orderId });
+      const piece = await Piece.find({ orderId, code });
       const currentSection = await Section.findOne({ number: sectionNumber });
       let pieceNumber = 1;
 
       if (piece.length) {
-        const maxPiece = await Piece.find({ orderId }).sort({ number: -1 }).limit(1);
+        const maxPiece = await Piece.find({ orderId, code }).sort({ number: -1 }).limit(1);
         pieceNumber = maxPiece.length ? maxPiece[0].number + 1 : 1;
       }
 
