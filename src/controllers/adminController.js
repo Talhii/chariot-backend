@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import fs from "fs"
 import xlsx from 'xlsx';
 import { csvToJson } from '../utils/csv-to-json.js';
+import mongoose from 'mongoose';
 
 export const getDashboardData = async (req, res) => {
     try {
@@ -114,6 +115,9 @@ export const getDashboardData = async (req, res) => {
                 }
             },
             {
+                $sort: { number: 1 }
+            },
+            {
                 $group: {
                     _id: null,
                     sections: { $push: "$$ROOT" },
@@ -141,7 +145,6 @@ export const getDashboardData = async (req, res) => {
         const workers = await User.find({
             role: "Worker"
         })
-
 
         const pieceCount = await Piece.countDocuments();
         const flaggedPiecesCount = await Piece.countDocuments({ status: "Flagged" })
@@ -499,7 +502,7 @@ export const createSection = async (req, res) => {
 
 export const getAllSections = async (req, res) => {
     try {
-        const sections = await Section.find();
+        const sections = await Section.find().sort({ number: 1 });
         res.status(200).json({
             status: 'success',
             data: sections
@@ -693,9 +696,11 @@ export const getAllPieces = async (req, res) => {
         const pieces = await Piece.find(queryObj).sort({ _id: -1 }).skip(skip).limit(Limit).populate({
             path: 'currentSectionId',
             model: Section,
+            select: "name"
         }).populate({
             path: 'orderId',
             model: Order,
+            select: "projectName"
         })
 
         const pieceCount = await Piece.countDocuments(queryObj);
@@ -712,6 +717,73 @@ export const getAllPieces = async (req, res) => {
         });
     }
 }
+
+export const getPieceProgress = async (req, res) => {
+    try {
+        const Page = req.query.page * 1 || 1;
+        const Limit = req.query.limit * 1 || 10;
+        const skip = (Page - 1) * Limit;
+        
+        let filter = {};
+
+        if (req.query.date) {
+            const startDate = new Date(req.query.date);
+            const endDate = new Date(req.query.date);
+            endDate.setHours(23, 59, 59, 999);
+
+            filter["history.timestamp"] = {
+                $gte: startDate,
+                $lte: endDate
+            };
+        }
+
+        if (req.query.section && mongoose.Types.ObjectId.isValid(req.query.section)) {
+            filter["history.section"] = new mongoose.Types.ObjectId(req.query.section);
+        }
+
+        if (req.query.worker && mongoose.Types.ObjectId.isValid(req.query.worker)) {
+            filter["history.workerId"] = new mongoose.Types.ObjectId(req.query.worker);
+        }
+
+        const pieces = await Piece.find(filter)
+            .sort({ _id: -1 })
+            .skip(skip)
+            .limit(Limit)
+            .populate({
+                path: 'currentSectionId',
+                model: Section,
+                select: "name"
+            })
+            .populate({
+                path: 'orderId',
+                model: Order,
+                select: "projectName"
+            })
+            .populate({
+                path: 'history.workerId',
+                model: User,
+                select: "fullName"
+            })
+            .populate({
+                path: 'history.section',
+                model: Section,
+                select: "name"
+            });
+
+        const pieceCount = await Piece.countDocuments(filter);
+
+        res.status(200).json({
+            status: 'success',
+            results: pieceCount,
+            data: pieces
+        });
+    } catch (err) {
+        res.status(400).json({
+            status: 'fail',
+            message: err.message
+        });
+    }
+};
 
 export const getPiecesGroupbySection = async (req, res) => {
     try {
