@@ -26,7 +26,8 @@ const pieceSchema = new mongoose.Schema(
         notes: { type: String },
         flagged: { type: Boolean, required: false }
       }
-    ]
+    ],
+    finalizedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
   },
   {
     timestamps: true

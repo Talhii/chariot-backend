@@ -318,8 +318,6 @@ export const deleteUser = async (req, res) => {
     }
 };
 
-
-
 //Orders
 export const getAllOrders = async (req, res) => {
     try {

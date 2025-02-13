@@ -103,12 +103,15 @@ export const getOrders = async (req, res) => {
 };
 
 export const upsertPieceDetail = async (req, res) => {
+  let photoUrl = null;
   const { pieceId, orderId } = req.query;
   const userId = req.user.id;
   const { sectionNumber, code } = req.body;
 
   try {
-    const photoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    if (req.file) {
+      photoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
     let nextSection = await Section.findOne({ number: { $gt: sectionNumber } }).sort({ number: 1 });
 
     if (sectionNumber == 1) {
@@ -194,6 +197,7 @@ export const upsertPieceDetail = async (req, res) => {
           {
             $set: {
               status: 'Completed',
+              finalizedBy: userId
             },
           },
           { new: true }
