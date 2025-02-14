@@ -391,7 +391,6 @@ export const createOrder = async (req, res) => {
                                 noOfPiece: row[noOfPieceKey]
                             })).filter(item => item.code && item.noOfPiece);
                         }
-
                     }
                     fs.unlinkSync(file.path);
                 } else {
@@ -721,7 +720,7 @@ export const getPieceProgress = async (req, res) => {
         const Page = req.query.page * 1 || 1;
         const Limit = req.query.limit * 1 || 10;
         const skip = (Page - 1) * Limit;
-        
+
         let filter = {};
 
         if (req.query.date) {
@@ -866,3 +865,146 @@ export const deletePiece = async (req, res) => {
         });
     }
 }
+
+
+
+
+import {
+    generateRegistrationOptions,
+    verifyRegistrationResponse,
+    generateAuthenticationOptions,
+    verifyAuthenticationResponse,
+} from '@simplewebauthn/server';
+import Worker from '../models/Worker.js';
+import base64url from 'base64url'
+
+// 🟢 1. Generate Options (Both Registration & Authentication)
+export const generateOptions = async (req, res) => {
+    const { userID, type } = req.body;
+    let user = await Worker.findOne({ userID });
+    if (!user && type === 'authentication') {
+        return res.status(404).json({ error: 'Worker not found' });
+    }
+
+    try {
+        if (type === 'registration') {
+            
+            const options = await generateRegistrationOptions({
+                rpName: process.env.RP_NAME,
+                rpID: process.env.RP_ID,
+                userID: +userID,
+                userName: `user-${userID}`,
+                attestationType: 'direct',
+                authenticatorSelection: {
+                    authenticatorAttachment: 'platform',
+                    requireResidentKey: true,
+                    residentKey: 'required', // Explicitly require resident keys
+                    userVerification: 'required',
+                },
+                authenticatorExtensions: {
+                    credProps: true,
+                    largeBlob: { support: true }, // Enable largeBlob extension for multiple credentials
+                },
+                timeout: 60000,
+            });
+
+            if (!user) {
+                user = new Worker({ userID, credentials: [] });
+            }
+            user.challenge = options.challenge;
+            await user.save();
+
+            return res.json({ options });
+        }
+
+        if (type === 'authentication') {
+            
+            const options = await generateAuthenticationOptions({
+                rpID: process.env.RP_ID,
+                allowCredentials: user.credentials.map(cred => ({
+                    id: cred.credentialID,
+                    type: 'public-key',
+                    transports: cred.transports,
+                })),
+                userVerification: 'required',
+                authenticatorExtensions: {
+                    appidExclude: false,
+                    credProps: true,
+                    uvm: true,
+                },
+            });
+
+            user.challenge = options.challenge;
+            await user.save();
+
+            return res.json({ options });
+        }
+
+        res.status(400).json({ error: 'Invalid type' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// 🟡 2. Verify Response (Both Registration & Authentication)
+export const verifyResponse = async (req, res) => {
+    const { userID, type, response } = req.body;
+
+    const user = await Worker.findOne({ userID });
+    if (!user) {
+        return res.status(404).json({ error: 'Worker not found' });
+    }
+
+    try {
+        if (type === 'registration') {
+            const verification = await verifyRegistrationResponse({
+                response,
+                expectedChallenge: user.challenge,
+                expectedOrigin: `${process.env.FRONTEND_URL}`,
+                expectedRPID: process.env.RP_ID,
+            });
+
+            if (verification.verified) {
+                const { id, publicKey, counter } = verification.registrationInfo.credential;
+                user.credentials.push({
+                    credentialID: id,
+                    publicKey: base64url.encode(Buffer.from(publicKey)),
+                    counter: counter,
+                });
+                await user.save();
+            }
+
+            return res.json({ verified: verification.verified });
+        }
+
+        if (type === 'authentication') {
+            const authenticator = user.credentials.find(
+                (cred) => cred.credentialID === response.rawId
+            );
+
+            const verification = await verifyAuthenticationResponse({
+                response,
+                expectedChallenge: user.challenge,
+                expectedOrigin: `${process.env.FRONTEND_URL}`,
+                expectedRPID: process.env.RP_ID,
+                credential: {
+                    id: authenticator.credentialID,
+                    publicKey: base64url.toBuffer(authenticator.publicKey),
+                    counter: authenticator?.counter,
+                },
+            });
+
+
+            if (verification.verified) {
+                authenticator.counter = verification.authenticationInfo.newCounter;
+                await user.save();
+            }
+
+            return res.json({ verified: verification.verified });
+        }
+
+        res.status(400).json({ error: 'Invalid type' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
