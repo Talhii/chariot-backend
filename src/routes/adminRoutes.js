@@ -1,5 +1,5 @@
 import express from 'express';
-import { getOrder, getAllOrders, createOrder, getAllUsers, createUser, getUser, updateUser, deleteUser, getAllSections, createSection, updateSection, getSection, deleteSection, assignSectionToWorker, getFlaggedPieces, resolveFlaggedPiece, getPiecesGroupbySection, getAllPieces, deletePiece, deleteOrder, updateOrder, getDashboardData, createPiece, updatePiece, getPiece, getPieceProgress, generateOptions, verifyResponse } from '../controllers/adminController.js';
+import { getOrder, getAllOrders, createOrder, getAllUsers, createUser, getUser, updateUser, deleteUser, getAllSections, createSection, updateSection, getSection, deleteSection, assignSectionToWorker, getFlaggedPieces, resolveFlaggedPiece, getPiecesGroupbySection, getAllPieces, deletePiece, deleteOrder, updateOrder, getDashboardData, createPiece, updatePiece, getPiece, getPieceProgress } from '../controllers/adminController.js';
 import { validate } from '../middleware/validator.js';
 import { createUserValidationSchema, updateUserValidationSchema, createSectionValidationSchema, updateSectionValidationSchema } from '../utils/validators/adminValidations.js';
 import { upload, uploadMultiple } from '../middleware/upload.js';
@@ -19,9 +19,6 @@ router.put('/user/:id/assign/:sectionId', assignSectionToWorker);
 router.put('/user/:id', [upload, validate(updateUserValidationSchema)], updateUser);
 router.get('/user/:id', getUser);
 router.delete('/user/:id', deleteUser);
-
-router.post('/user/webauthn/options', generateOptions);
-router.post('/user/webauthn/verify', verifyResponse);
 
 router.get('/section', getAllSections);
 router.post('/section', validate(createSectionValidationSchema), createSection);

@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema(
     },
     photoUrl: { 
       type: String, 
-      required: true 
+      required: false 
     },
     section: {
       type: mongoose.Schema.Types.ObjectId,

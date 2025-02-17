@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import Section from './models/Section.js';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
+import bcrypt from "bcryptjs"
+import User from './models/User.js';
 
 dotenv.config();
 const sectionsData = [
@@ -58,14 +60,29 @@ const seedDatabase = async () => {
     const existingSections = await Section.find({});
 
     if (existingSections.length > 0) {
-      console.log('Sections already exist. Seeder will not run.');
-      mongoose.connection.close();
-      return;
+      console.log('Sections already exist. Section Seeder will not run.');
+    }
+    else {
+      await Section.insertMany(sectionsData);
+      console.log('Sections seeded successfully!');
     }
 
-    await Section.insertMany(sectionsData);
+    const existingAdmin = await User.findOne({ role: 'Admin' });
+    if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      const adminUser = new User({
+        fullName: 'Super Admin',
+        role: 'Admin',
+        username: 'admin',
+        password: hashedPassword,
+      });
 
-    console.log('Sections seeded successfully!');
+      await adminUser.save();
+      console.log('Admin user created successfully!');
+    } else {
+      console.log('Admin user already exists. Skipping admin creation.');
+    }
+
     mongoose.connection.close();
   } catch (error) {
     console.error('Error seeding the database:', error);
