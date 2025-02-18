@@ -8,6 +8,8 @@ import workerRoutes from './routes/workerRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import commonRoutes from './routes/commonRoutes.js';
 import bodyParser from 'body-parser';
+import https from 'https';
+import fs from 'fs';
 
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -25,6 +27,12 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
+
+const options = {
+  key: fs.readFileSync('/etc/ssl/private/selfsigned.key'),
+  cert: fs.readFileSync('/etc/ssl/certs/selfsigned.crt')
+};
+
 
 app.use(cors(corsOptions));
 app.use(logger);
@@ -48,6 +56,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+
+https.createServer(options, app).listen(PORT, () => {
+  console.log('Server running on https://localhost:5000');
 });
