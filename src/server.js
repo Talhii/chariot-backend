@@ -8,8 +8,7 @@ import workerRoutes from './routes/workerRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import commonRoutes from './routes/commonRoutes.js';
 import bodyParser from 'body-parser';
-import https from 'https';
-import fs from 'fs';
+import http from 'http';
 
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -28,12 +27,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
-const options = {
-  key: fs.readFileSync('/home/ec2-user/ssl/selfsigned.key'),
-  cert: fs.readFileSync('/home/ec2-user/ssl/selfsigned.crt')
-};
-
-
+// Use HTTP server instead of HTTPS server
 app.use(cors(corsOptions));
 app.use(logger);
 app.use(express.json());
@@ -56,7 +50,6 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-
-https.createServer(options, app).listen(PORT, () => {
-  console.log('Server running on https://localhost:5000');
+http.createServer(app).listen(PORT, () => {
+  console.log('Server running on http://localhost:5000');
 });
