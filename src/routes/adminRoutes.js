@@ -3,6 +3,10 @@ import { getOrder, getAllOrders, createOrder, getAllUsers, createUser, getUser, 
 import { validate } from '../middleware/validator.js';
 import { createUserValidationSchema, updateUserValidationSchema, createSectionValidationSchema, updateSectionValidationSchema } from '../utils/validators/adminValidations.js';
 import { upload, uploadMultiple } from '../middleware/upload.js';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+
 const router = express.Router();
 
 router.get('/dashboard', getDashboardData)
@@ -37,3 +41,4 @@ router.put('/piece/:id', updatePiece);
 router.delete('/piece/:id', deletePiece);
 
 export default router;
+
