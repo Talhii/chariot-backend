@@ -29,8 +29,8 @@ const corsOptions = {
 };
 
 const options = {
-  key: fs.readFileSync('/etc/ssl/private/selfsigned.key'),
-  cert: fs.readFileSync('/etc/ssl/certs/selfsigned.crt')
+  key: fs.readFileSync('/home/ec2-user/ssl/selfsigned.key'),
+  cert: fs.readFileSync('/home/ec2-user/ssl/selfsigned.crt')
 };
 
 
