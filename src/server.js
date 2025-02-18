@@ -21,7 +21,7 @@ dotenv.config();
 const app = express();
 
 const corsOptions = {
-  origin: ['https://main.dcjme3n2fmske.amplifyapp.com/', 'http://localhost:3000', 'http://192.168.100.114:3000'],
+  origin: ['https://main.dcjme3n2fmske.amplifyapp.com', 'http://localhost:3000', 'http://192.168.100.114:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
