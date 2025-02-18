@@ -37,7 +37,7 @@ connectDB().catch((error) => {
 });
 
 app.use('/api/worker', authenticateToken, workerRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/admin', authenticateToken, adminRoutes);
 app.use('/api', commonRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
